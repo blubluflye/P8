@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
+import com.openclassrooms.tourguide.dto.NearbyAttraction;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -26,7 +27,7 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
-
+import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
@@ -95,14 +96,38 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
+	public List<NearbyAttraction> getNearByAttractions(VisitedLocation visitedLocation, User user) {
+		List<NearbyAttraction> nearbyAttractions = new ArrayList<>();
 		for (Attraction attraction : gpsUtil.getAttractions()) {
-			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
+			
+			Location attractionLocation = new Location(attraction.latitude, attraction.longitude);
+			Location userLocation = gpsUtil.getUserLocation(user.getUserId()).location;
+			int reward = rewardsService.getRewardPoints(attraction, user);
+			double attractionDistance = rewardsService.getDistance(userLocation, attractionLocation);
+			NearbyAttraction nearbyAttraction = new NearbyAttraction(attraction.attractionName, attractionLocation, userLocation , attractionDistance, reward);
+			if (nearbyAttractions.size()<5) {
+				nearbyAttractions = addToHisPlace(nearbyAttraction, nearbyAttractions);
+			}
+			else if(nearbyAttractions.get(4).distance() > nearbyAttraction.distance()) {
+				nearbyAttractions = addToHisPlace(nearbyAttraction, nearbyAttractions);
 			}
 		}
+		return nearbyAttractions;
+	}
 
+	private List<NearbyAttraction> addToHisPlace(NearbyAttraction newNearbyAttraction,
+			List<NearbyAttraction> nearbyAttractions) {
+		if (nearbyAttractions.size() == 5)
+			nearbyAttractions.remove(4);
+		int index = 0;
+		for (NearbyAttraction nearbyAttraction : nearbyAttractions) {
+			if (newNearbyAttraction.distance() < nearbyAttraction.distance()) {
+				nearbyAttractions.add(index, newNearbyAttraction);
+				return nearbyAttractions;
+			}
+			index++;
+		}
+		nearbyAttractions.add(newNearbyAttraction);
 		return nearbyAttractions;
 	}
 
