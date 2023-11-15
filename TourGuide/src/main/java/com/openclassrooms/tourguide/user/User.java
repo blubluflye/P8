@@ -57,8 +57,9 @@ public class User {
 		return latestLocationTimestamp;
 	}
 	
-	public void addToVisitedLocations(VisitedLocation visitedLocation) {
+	public VisitedLocation addToVisitedLocations(VisitedLocation visitedLocation) {
 		visitedLocations.add(visitedLocation);
+		return visitedLocation;
 	}
 	
 	public List<VisitedLocation> getVisitedLocations() {

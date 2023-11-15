@@ -16,6 +16,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -39,6 +42,13 @@ public class TourGuideService {
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
+	private final ExecutorService executorService = Executors.newFixedThreadPool(100);
+	
+
+
+	public ExecutorService getExecutorService() {
+		return executorService;
+	}
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -89,10 +99,22 @@ public class TourGuideService {
 		return providers;
 	}
 
+	public void trackUserLocationAsync(User user) {
+		CompletableFuture.supplyAsync(() -> {
+			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+			user.addToVisitedLocations(visitedLocation);
+			return visitedLocation;
+		}, executorService).thenAccept(visitedLocation -> {
+			rewardsService.calculateRewards(user);
+		});
+	}
+	
 	public VisitedLocation trackUserLocation(User user) {
+		//CompletableFuture<VisitedLocation> futurVisitedLocation = CompletableFuture.supplyAsync(() -> user.addToVisitedLocations(gpsUtil.getUserLocation(user.getUserId())));
 		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
 		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
+		CompletableFuture<User> futurUser = CompletableFuture.supplyAsync(() -> rewardsService.calculateRewards(user));
+		//rewardsService.calculateRewards(user);
 		return visitedLocation;
 	}
 
