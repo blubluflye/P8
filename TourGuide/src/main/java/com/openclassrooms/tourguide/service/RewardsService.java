@@ -22,7 +22,7 @@ public class RewardsService {
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
 	// proximity in miles
-    private int defaultProximityBuffer = 1000;
+    private int defaultProximityBuffer = 50;
 	private int proximityBuffer = defaultProximityBuffer;
 	private int attractionProximityRange = 200;
 	private final GpsUtil gpsUtil;
@@ -48,14 +48,14 @@ public class RewardsService {
 	
 
 	
-	public User calculateRewards(User user) {
+	public void calculateRewards(User user) {
 		List<VisitedLocation> userLocations = user.getVisitedLocations();
 		CopyOnWriteArrayList<VisitedLocation> userLocationsCOW = new CopyOnWriteArrayList<>();
 		for(VisitedLocation toCopy : userLocations) {
 			userLocationsCOW.add(toCopy);
-		};
-		List<Attraction> attractions = gpsUtil.getAttractions();
+		}
 		CompletableFuture.supplyAsync(() -> {
+			List<Attraction> attractions = gpsUtil.getAttractions();
 			for(VisitedLocation visitedLocation : userLocationsCOW){
 				for(Attraction attraction : attractions) {
 					if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
@@ -68,7 +68,6 @@ public class RewardsService {
 			}
 			return null;
 		}, executorService);
-		return user;
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
