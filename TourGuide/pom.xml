@@ -66,6 +66,13 @@
 		</dependency>
 	</dependencies>
 
+	<distributionManagement>
+		<repository>
+			<id>internal.repo</id>
+			<name>Internal repo</name>
+			<url>file:///home/release/tourGuide</url>
+		</repository>
+	</distributionManagement>
 	<build>
 		<plugins>
 			<plugin>
