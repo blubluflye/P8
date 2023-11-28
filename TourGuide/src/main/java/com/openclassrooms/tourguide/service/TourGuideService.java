@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -71,8 +72,15 @@ public class TourGuideService {
 	}
 
 	public VisitedLocation getUserLocation(User user) {
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
+		VisitedLocation visitedLocation = null;
+		try {
+			visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
+					: trackUserLocation(user).get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 		return visitedLocation;
 	}
 
@@ -99,7 +107,7 @@ public class TourGuideService {
 		return providers;
 	}
 
-	public CompletableFuture<VisitedLocation> trackUserLocationAsync(User user) {
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
 		 CompletableFuture<VisitedLocation> futurVisitedLocation = CompletableFuture.supplyAsync(() -> {
 			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
 			user.addToVisitedLocations(visitedLocation);
@@ -111,12 +119,6 @@ public class TourGuideService {
 		return futurVisitedLocation;
 	}
 	
-	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
-		return visitedLocation;
-	}
 
 	public List<NearbyAttraction> getNearByAttractions(VisitedLocation visitedLocation, User user) {
 		List<NearbyAttraction> nearbyAttractions = new ArrayList<>();

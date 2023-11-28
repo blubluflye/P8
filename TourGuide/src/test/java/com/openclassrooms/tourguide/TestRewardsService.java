@@ -36,8 +36,16 @@ public class TestRewardsService {
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
 		tourGuideService.trackUserLocation(user);
-		ThreadPoolExecutor executorService = (ThreadPoolExecutor) rewardsService.getExecutorService();
-		while(executorService.getActiveCount() > 0) {
+		ThreadPoolExecutor executorTourGuideService = (ThreadPoolExecutor) tourGuideService.getExecutorService();
+		while(executorTourGuideService.getActiveCount() > 0) {
+			try {
+				TimeUnit.SECONDS.sleep(5);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		ThreadPoolExecutor executorRewardService = (ThreadPoolExecutor) rewardsService.getExecutorService();
+		while(executorRewardService.getActiveCount() > 0) {
 			try {
 				TimeUnit.SECONDS.sleep(5);
 			} catch (InterruptedException e) {
