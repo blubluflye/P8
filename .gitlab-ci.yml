@@ -18,11 +18,15 @@ build:
    - mvn compile
 
 test:
-  stage: build
+  stage: test
   script:
    - mvn test
 
 deploy:
-  stage: build
+  stage: deploy
   script:
-   - mvn deploy
+   - mvn -DskipTests=true package
+  artifacts:
+    paths:
+      - TourGuide/target/*.jar
+
