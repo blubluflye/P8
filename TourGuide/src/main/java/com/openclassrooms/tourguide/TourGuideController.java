@@ -28,6 +28,16 @@ public class TourGuideController {
         return "Greetings from TourGuide!";
     }
     
+    @RequestMapping("/getNbUser") 
+    public int getNbUser() {
+    	return tourGuideService.getAllUsers().size();
+    }
+    
+    @RequestMapping("/getFirstUserName") 
+    public String getFirstUserName() {
+    	return tourGuideService.getAllUsers().get(0).getUserName();
+    }
+    
     @RequestMapping("/getLocation") 
     public VisitedLocation getLocation(@RequestParam String userName) {
     	return tourGuideService.getUserLocation(getUser(userName));
